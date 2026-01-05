@@ -196,10 +196,19 @@ class VisaAgent:
         except Exception as exc:  # pragma: no cover - log unexpected issues
             return f"Falha ao pesquisar notícias: {exc}"
 
+    def _retrieve_context(self, question: str) -> List[Document]:
+        if not self.retriever:
+            return []
+
+        # LangChain retrievers in 0.2+ are Runnables (use invoke). Legacy retrievers expose get_relevant_documents.
+        if hasattr(self.retriever, "get_relevant_documents"):
+            return self.retriever.get_relevant_documents(question)
+        if hasattr(self.retriever, "invoke"):
+            return self.retriever.invoke(question)
+        return []
+
     def answer_question(self, question: str) -> str:
-        context_docs = []
-        if self.retriever:
-            context_docs = self.retriever.get_relevant_documents(question)
+        context_docs = self._retrieve_context(question)
         context = _format_context(context_docs)
         news = self._fetch_news(question)
         messages = self.prompt.format_messages(
