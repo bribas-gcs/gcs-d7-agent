@@ -59,7 +59,15 @@ Também é possível consumir o agente via HTTP usando FastAPI e uma página web
 uvicorn rag_agent.web:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-A página de teste estará em `http://localhost:8000/` e faz chamadas POST para `http://localhost:8000/api/chat`.
+A página de teste estará em `http://localhost:8000/` e faz chamadas POST para `http://localhost:8000/api/chat`. Caso o Python não encontre o pacote (`ModuleNotFoundError: rag_agent`), execute adicionando a pasta `src` ao caminho:
+
+```bash
+uvicorn --app-dir src rag_agent.web:app --host 0.0.0.0 --port 8000 --reload
+# ou
+PYTHONPATH=src uvicorn rag_agent.web:app --host 0.0.0.0 --port 8000 --reload
+# ou simplesmente
+uvicorn asgi:app --host 0.0.0.0 --port 8000 --reload
+```
 
 ## Testes
 
