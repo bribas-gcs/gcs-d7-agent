@@ -9,6 +9,7 @@ Este projeto cria um agente RAG em Python usando LangChain + OpenAI para respond
   - `OPENAI_API_KEY` – chave da API OpenAI.
   - `TAVILY_API_KEY` – **opcional**, habilita buscas de notícias recentes via Tavily.
 - Exemplo: copie `.env.example` para `.env` e preencha as chaves antes de rodar o agente.
+- O arquivo `.env` é carregado automaticamente (via `python-dotenv`) ao executar `main.py`.
 
 ## Instalação
 

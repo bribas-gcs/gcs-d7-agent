@@ -4,6 +4,8 @@ import argparse
 import sys
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 ROOT_DIR = Path(__file__).resolve().parent
 SRC_DIR = ROOT_DIR / "src"
 if str(SRC_DIR) not in sys.path:
@@ -54,6 +56,7 @@ def interactive_loop(agent) -> None:
 
 
 def main() -> None:
+    load_dotenv()
     args = parse_args()
     agent = create_agent(
         data_dir=args.data_dir,
