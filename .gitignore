@@ -1,0 +1,11 @@
+__pycache__/
+.venv/
+.idea/
+.chroma/
+.pytest_cache/
+*.pyc
+*.pyo
+*.DS_Store
+data/*.pdf
+data/*.doc
+data/*.docx
