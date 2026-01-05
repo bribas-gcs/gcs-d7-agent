@@ -1,16 +1,71 @@
-# This is a sample Python script.
+from __future__ import annotations
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+import argparse
+import sys
+from pathlib import Path
+
+ROOT_DIR = Path(__file__).resolve().parent
+SRC_DIR = ROOT_DIR / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
+
+from rag_agent.agent import create_agent  # noqa: E402
 
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Agente RAG especializado no Visto D7 de Portugal."
+    )
+    parser.add_argument(
+        "--question",
+        "-q",
+        help="Pergunta para o agente. Se omitida, será iniciado um modo interativo.",
+    )
+    parser.add_argument(
+        "--data-dir",
+        default="data",
+        type=Path,
+        help="Diretório onde estão os arquivos PDF/DOC/DOCX com conhecimento local.",
+    )
+    parser.add_argument(
+        "--persist-dir",
+        default=".chroma",
+        type=Path,
+        help="Diretório para persistir o índice vetorial.",
+    )
+    parser.add_argument(
+        "--reindex",
+        action="store_true",
+        help="Força a reindexação dos documentos.",
+    )
+    return parser.parse_args()
 
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+def interactive_loop(agent) -> None:
+    print("Digite sua pergunta sobre o Visto D7 (ou 'sair' para encerrar):")
+    while True:
+        question = input("> ").strip()
+        if not question or question.lower() in {"sair", "exit", "quit"}:
+            break
+        answer = agent.answer_question(question)
+        print("\nResposta:\n")
+        print(answer)
+        print("\n" + "-" * 80 + "\n")
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+
+def main() -> None:
+    args = parse_args()
+    agent = create_agent(
+        data_dir=args.data_dir,
+        persist_dir=args.persist_dir,
+        reindex=args.reindex,
+    )
+
+    if args.question:
+        print(agent.answer_question(args.question))
+    else:
+        interactive_loop(agent)
+
+
+if __name__ == "__main__":
+    main()
