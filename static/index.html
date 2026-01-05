@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat D7</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+      }
+
+      body {
+        margin: 0;
+        padding: 1.5rem;
+        background: radial-gradient(circle at top left, #1f3b4d, #0a0f16 45%, #090d12);
+        color: #e6edf3;
+        min-height: 100vh;
+      }
+
+      .container {
+        max-width: 960px;
+        margin: 0 auto;
+        background: rgba(15, 23, 42, 0.65);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        border-radius: 14px;
+        padding: 1.5rem;
+        box-shadow: 0 20px 70px rgba(0, 0, 0, 0.45);
+        backdrop-filter: blur(8px);
+      }
+
+      h1 {
+        margin-top: 0;
+        font-size: 1.9rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+      h1 span.logo {
+        width: 38px;
+        height: 38px;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(135deg, #22d3ee, #14b8a6);
+        color: #0f172a;
+        border-radius: 10px;
+        font-weight: 800;
+        font-size: 1.1rem;
+        box-shadow: 0 10px 30px rgba(34, 211, 238, 0.35);
+      }
+
+      label {
+        font-weight: 600;
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #cbd5e1;
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 110px;
+        background: #0b1220;
+        color: #e2e8f0;
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        border-radius: 12px;
+        padding: 0.85rem 1rem;
+        font-size: 1rem;
+        resize: vertical;
+        transition: border-color 0.2s, box-shadow 0.2s;
+      }
+
+      textarea:focus {
+        outline: none;
+        border-color: #22d3ee;
+        box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.2);
+      }
+
+      button {
+        margin-top: 0.75rem;
+        background: linear-gradient(135deg, #22d3ee, #0ea5e9);
+        color: #0f172a;
+        border: none;
+        border-radius: 12px;
+        padding: 0.85rem 1.5rem;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 10px 30px rgba(14, 165, 233, 0.35);
+        transition: transform 0.15s ease, opacity 0.2s;
+      }
+
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        box-shadow: none;
+      }
+
+      button:not(:disabled):hover {
+        transform: translateY(-1px);
+      }
+
+      .status {
+        margin-top: 0.5rem;
+        font-size: 0.95rem;
+        color: #cbd5e1;
+      }
+
+      .bubble {
+        margin-top: 1.5rem;
+        padding: 1.1rem 1.25rem;
+        border-radius: 14px;
+        background: rgba(148, 163, 184, 0.07);
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        white-space: pre-wrap;
+        line-height: 1.6;
+      }
+
+      .bubble strong {
+        color: #e2e8f0;
+      }
+
+      footer {
+        margin-top: 1.25rem;
+        font-size: 0.9rem;
+        color: #94a3b8;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1><span class="logo">D7</span> Assistente RAG</h1>
+      <p>
+        Faça perguntas sobre o Visto D7 de Portugal. O agente usa os documentos em
+        <code>data/</code> e, se configurado, pesquisas de notícias recentes.
+      </p>
+
+      <label for="question">Pergunta</label>
+      <textarea id="question" placeholder="Ex.: Quais são os requisitos do Visto D7?"></textarea>
+
+      <button id="send">Perguntar</button>
+      <div class="status" id="status"></div>
+
+      <div id="answer" class="bubble" hidden></div>
+
+      <footer>
+        API disponível em <code>/api/chat</code>. Configure as variáveis de ambiente
+        <code>OPENAI_API_KEY</code> e opcionalmente <code>TAVILY_API_KEY</code>.
+      </footer>
+    </div>
+
+    <script>
+      const questionEl = document.getElementById("question");
+      const answerEl = document.getElementById("answer");
+      const statusEl = document.getElementById("status");
+      const sendBtn = document.getElementById("send");
+
+      async function sendQuestion() {
+        const question = questionEl.value.trim();
+        if (!question) {
+          statusEl.textContent = "Escreva uma pergunta antes de enviar.";
+          return;
+        }
+        answerEl.hidden = true;
+        statusEl.textContent = "Consultando o agente...";
+        sendBtn.disabled = true;
+
+        try {
+          const response = await fetch("/api/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ question }),
+          });
+
+          if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            throw new Error(error.detail || "Falha ao contactar o agente.");
+          }
+
+          const data = await response.json();
+          answerEl.textContent = data.answer || "Sem resposta";
+          answerEl.hidden = false;
+          statusEl.textContent = "";
+        } catch (error) {
+          statusEl.textContent = error.message || "Erro inesperado";
+        } finally {
+          sendBtn.disabled = false;
+        }
+      }
+
+      sendBtn.addEventListener("click", sendQuestion);
+      questionEl.addEventListener("keydown", (ev) => {
+        if (ev.key === "Enter" && (ev.ctrlKey || ev.metaKey)) {
+          sendQuestion();
+        }
+      });
+    </script>
+  </body>
+</html>

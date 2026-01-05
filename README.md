@@ -45,6 +45,22 @@ Parâmetros úteis:
 - `--persist-dir`: pasta para persistir o índice vetorial (padrão: `.chroma`).
 - `--reindex`: força a reindexação dos documentos.
 
+## API HTTP + interface web
+
+Também é possível consumir o agente via HTTP usando FastAPI e uma página web simples:
+
+1. Configure as variáveis de ambiente (`OPENAI_API_KEY`, opcionalmente `TAVILY_API_KEY`) e, se quiser, personalize:
+   - `DATA_DIR` (padrão: `data`)
+   - `PERSIST_DIR` (padrão: `.chroma`)
+   - `REINDEX_ON_STARTUP` (`true`/`false`, padrão: `false`)
+2. Inicie o servidor:
+
+```bash
+uvicorn rag_agent.web:app --host 0.0.0.0 --port 8000 --reload
+```
+
+A página de teste estará em `http://localhost:8000/` e faz chamadas POST para `http://localhost:8000/api/chat`.
+
 ## Testes
 
 Execute a suíte de testes com:
