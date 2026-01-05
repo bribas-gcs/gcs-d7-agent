@@ -36,6 +36,8 @@ def create_app(agent: Optional[VisaAgent] = None) -> FastAPI:
     """Create a FastAPI instance wired to the visa agent."""
 
     load_dotenv()
+    agent_box: dict[str, Optional[VisaAgent]] = {"instance": agent}
+
     app = FastAPI(
         title="D7 Visa Agent API",
         description=(
@@ -45,7 +47,10 @@ def create_app(agent: Optional[VisaAgent] = None) -> FastAPI:
         version="1.0.0",
     )
 
-    app_agent = agent or _default_agent()
+    def get_agent() -> VisaAgent:
+        if agent_box["instance"] is None:
+            agent_box["instance"] = _default_agent()
+        return agent_box["instance"]
 
     if STATIC_DIR.exists():
         app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
@@ -60,7 +65,7 @@ def create_app(agent: Optional[VisaAgent] = None) -> FastAPI:
     @app.post("/api/chat", response_model=ChatResponse)
     def chat(payload: ChatRequest) -> ChatResponse:
         try:
-            answer = app_agent.answer_question(payload.question)
+            answer = get_agent().answer_question(payload.question)
         except Exception as exc:  # pragma: no cover - proteção de produção
             raise HTTPException(status_code=500, detail=str(exc)) from exc
         return ChatResponse(answer=answer)
@@ -68,4 +73,4 @@ def create_app(agent: Optional[VisaAgent] = None) -> FastAPI:
     return app
 
 
-app = create_app()
+app = create_app(agent=None)
